@@ -1,5 +1,5 @@
 name:            digest
-version:         0.0.0.8
+version:         0.0.0.9
 copyright:       (c) 2009 Eugene Kirpichov
 license:         BSD3
 license-file:    LICENSE
@@ -18,8 +18,8 @@ flag bytestring-in-base
                included in the base package.
 
 source-repository head
-  type: darcs
-  location: http://patch-tag.com/r/jkff/digest
+  type: git
+  location: git://github.com/jkff/digest
 
 library
   exposed-modules: Data.Digest.CRC32,

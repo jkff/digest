@@ -18,8 +18,8 @@ module Data.Digest.Adler32 (
 
 import Foreign
 import Foreign.C.Types
-import Foreign.ForeignPtr
-import GHC.Ptr
+import Foreign.ForeignPtr ()
+import GHC.Ptr ()
 
 import qualified Data.ByteString as S
 import qualified Data.ByteString.Internal as BI
