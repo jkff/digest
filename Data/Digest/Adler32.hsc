@@ -32,7 +32,7 @@ import qualified Data.ByteString.Lazy.Internal as LI
 class Adler32 a where
     -- | Compute Adler32 checksum
     adler32 :: a -> Word32
-    adler32 = adler32Update 0
+    adler32 = adler32Update 1
 
     -- | Given the Adler32 checksum of a string, compute Adler32 of its
     -- concatenation with another string (t.i., incrementally update the 
