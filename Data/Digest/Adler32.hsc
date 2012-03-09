@@ -16,15 +16,13 @@ module Data.Digest.Adler32 (
     Adler32, adler32, adler32Update
 ) where
 
+import Data.ByteString.Unsafe (unsafeUseAsCStringLen)
 import Foreign
-import Foreign.C.Types
-import Foreign.ForeignPtr ()
-import GHC.Ptr ()
 
 import qualified Data.ByteString as S
-import qualified Data.ByteString.Internal as BI
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Lazy.Internal as LI
+import qualified System.IO.Unsafe as U
 
 #include "zlib.h"
 
@@ -50,15 +48,20 @@ instance Adler32 [Word8] where
 
 
 adler32_s_update :: Word32 -> S.ByteString -> Word32
-adler32_s_update n s = adler32_l_update n (LI.Chunk s LI.Empty)
+adler32_s_update seed str
+    | S.null str = seed
+    | otherwise =
+        U.unsafePerformIO $
+        unsafeUseAsCStringLen str $
+        \(buf, len) -> fmap fromIntegral $
+            adler32_c (fromIntegral seed) (castPtr buf) (fromIntegral len)
 
 adler32_l_update :: Word32 -> L.ByteString -> Word32
-adler32_l_update n = LI.foldlChunks updateAdler n
-    where updateAdler adler bs = fromIntegral $ adler32_c (fromIntegral adler) buf (fromIntegral len)
-              where (ptr, offset, len) = BI.toForeignPtr bs
-                    buf = (unsafeForeignPtrToPtr ptr) `plusPtr` offset
+adler32_l_update = LI.foldlChunks adler32_s_update
+
 
 foreign import ccall unsafe "zlib.h adler32"
-    adler32_c :: CInt -> Ptr Word8 -> CInt -> CInt -- adler, buf, len -> adler'
-
-
+    adler32_c :: #{type uLong}
+              -> Ptr #{type Bytef}
+              -> #{type uInt}
+              -> IO #{type uLong}

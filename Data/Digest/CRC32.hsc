@@ -16,15 +16,13 @@ module Data.Digest.CRC32 (
     CRC32, crc32, crc32Update
 ) where
 
+import Data.ByteString.Unsafe (unsafeUseAsCStringLen)
 import Foreign
-import Foreign.C.Types
-import Foreign.ForeignPtr ()
-import GHC.Ptr ()
 
 import qualified Data.ByteString as S
-import qualified Data.ByteString.Internal as BI
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Lazy.Internal as LI
+import qualified System.IO.Unsafe as U
 
 #include "zlib.h"
 
@@ -50,15 +48,21 @@ instance CRC32 [Word8] where
 
 
 crc32_s_update :: Word32 -> S.ByteString -> Word32
-crc32_s_update n s = crc32_l_update n (LI.Chunk s LI.Empty)
+crc32_s_update seed str
+    | S.null str = seed
+    | otherwise =
+        U.unsafePerformIO $
+        unsafeUseAsCStringLen str $
+        \(buf, len) -> fmap fromIntegral $
+            crc32_c (fromIntegral seed) (castPtr buf) (fromIntegral len)
 
 crc32_l_update :: Word32 -> L.ByteString -> Word32
-crc32_l_update n = LI.foldlChunks updateCRC n
-    where updateCRC crc bs = fromIntegral $ crc32_c (fromIntegral crc) buf (fromIntegral len)
-              where (ptr, offset, len) = BI.toForeignPtr bs
-                    buf = (unsafeForeignPtrToPtr ptr) `plusPtr` offset
+crc32_l_update = LI.foldlChunks crc32_s_update
+
 
 foreign import ccall unsafe "zlib.h crc32"
-    crc32_c :: CInt -> Ptr Word8 -> CInt -> CInt -- crc, buf, len -> crc'
-
+    crc32_c :: #{type uLong}
+            -> Ptr #{type Bytef}
+            -> #{type uInt}
+            -> IO #{type uLong}
 
