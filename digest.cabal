@@ -13,6 +13,12 @@ description:     This package provides efficient cryptographic hash implementati
 stability:       provisional
 build-type:      Simple
 cabal-version:   >= 1.6
+
+extra-source-files:
+  testing/trivial-reference.c
+  testing/trivial.expected
+  testing/trivial.hs
+
 flag bytestring-in-base
   description: In the ghc-6.6 era the bytestring modules were
                included in the base package.
