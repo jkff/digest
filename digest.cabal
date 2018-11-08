@@ -42,6 +42,6 @@ library
   includes:        zlib.h
   ghc-options:     -Wall
   if !os(windows)
-    extra-libraries: z
+    pkgconfig-depends: zlib
   else
     build-depends: zlib
